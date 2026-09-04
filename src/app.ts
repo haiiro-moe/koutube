@@ -121,9 +121,13 @@ export default {
 			for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
 				config.api_base = getRandomApiInstance();
 
-				if (env.IV_AUTH && env.IV_DOMAIN) {
-					config.api_base = 'https://' + env.IV_DOMAIN;
-					config.auth = env.IV_AUTH;
+				if (env.IV_DOMAIN) {
+					config.api_base = env.IV_DOMAIN.startsWith('http://') || env.IV_DOMAIN.startsWith('https://')
+						? env.IV_DOMAIN.replace(/\/$/, '')
+						: 'https://' + env.IV_DOMAIN;
+					config.auth = env.IV_AUTH || '';
+				} else {
+					config.auth = '';
 				}
 
 				try {
