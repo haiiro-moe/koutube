@@ -1,3 +1,11 @@
+## koutube Standalone Edition
+
+This fork keeps the original YouTube embed-fixing behavior while making the service self-hostable as a regular Node.js application. Cloudflare Workers, D1, Wrangler, and Browser Rendering are replaced with a Node HTTP server, SQLite persistence, and local Puppeteer/Chromium rendering for image embeds. It is also included in the parent Docker Compose stack as the `koutube` service, with persistent cache storage and a redesigned public listing.
+
+The original README follows below unchanged.
+
+**Original README**
+
 <div align="center">
 
   [![Badge indicating Invidious instance status](https://status.igerman.cc/api/badge/40/status?upColor=%233d843b&pendingColor=b57602&style=for-the-badge&label=Invidious)](https://koutube.com)
