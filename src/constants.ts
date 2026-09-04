@@ -10,7 +10,7 @@ export function getRandomApiInstance() {
 }
 
 export const config = {
-	appName: 'Koutube - use s/y/k',
+	appName: 'Gakkou YouTube Club',
 	appLink: 'https://koutube.com',
 
 	enableTickCheck: false, // costs an extra request to the iteroni api

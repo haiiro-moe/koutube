@@ -1,378 +1,53 @@
 <!doctype html>
-<html>
-
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Koutube cache</title>
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.12/dist/full.min.css" rel="stylesheet" type="text/css" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gakkou YouTube Club // public cache</title>
+  <style>
+    :root { color-scheme: dark; --bg:#090a0f; --panel:#10131b; --panel2:#151a25; --line:#273044; --text:#edf2ff; --muted:#8b96ad; --pink:#ff3d9a; --cyan:#37e3ff; --lime:#b8ff38; }
+    * { box-sizing:border-box; border-radius:0 !important; }
+    body { margin:0; min-height:100vh; color:var(--text); background-color:var(--bg); background-image:linear-gradient(rgba(55,227,255,.065) 1px, transparent 1px),linear-gradient(90deg, rgba(55,227,255,.065) 1px, transparent 1px); background-size:32px 32px; font:14px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace; }
+    body:before { content:""; position:fixed; inset:0; pointer-events:none; background:radial-gradient(circle at 85% 0,rgba(255,61,154,.16),transparent 32%),radial-gradient(circle at 0 100%,rgba(55,227,255,.1),transparent 28%); }
+    .shell { position:relative; width:min(1500px,calc(100% - 32px)); margin:0 auto; padding:32px 0 24px; }
+    header { display:flex; justify-content:space-between; align-items:flex-end; gap:24px; padding-bottom:24px; border-bottom:1px solid var(--line); }
+    .eyebrow { color:var(--cyan); font-size:11px; letter-spacing:.18em; text-transform:uppercase; }
+    h1 { margin:7px 0 0; font:800 clamp(30px,5vw,64px)/.95 system-ui,sans-serif; letter-spacing:-.06em; }
+    h1 span { color:var(--pink); }
+    .count { text-align:right; color:var(--muted); } .count strong { display:block; color:var(--lime); font-size:30px; line-height:1; }
+    main { margin-top:24px; border:1px solid var(--line); background:rgba(16,19,27,.94); overflow:auto; }
+    table { width:100%; min-width:920px; border-collapse:collapse; text-align:left; }
+    th { color:var(--cyan); background:var(--panel2); font-size:11px; letter-spacing:.1em; text-transform:uppercase; }
+    th,td { padding:14px 16px; border-bottom:1px solid var(--line); white-space:nowrap; }
+    tr:last-child td { border-bottom:0; } tbody tr:hover { background:#1c2230; }
+    a { color:var(--pink); text-decoration:none; } a:hover { color:var(--lime); text-decoration:underline; }
+    .tag { display:inline-block; padding:3px 7px; border:1px solid var(--line); color:var(--lime); font-size:11px; text-transform:uppercase; }
+    .muted { color:var(--muted); } .empty { padding:72px 20px; text-align:center; color:var(--muted); }
+    nav { display:flex; justify-content:space-between; align-items:center; padding-top:18px; } button { border:1px solid var(--cyan); background:transparent; color:var(--cyan); padding:9px 14px; font:inherit; cursor:pointer; } button:hover { background:var(--cyan); color:var(--bg); } button:disabled { opacity:.3; cursor:not-allowed; }
+    footer { display:flex; justify-content:space-between; gap:16px; margin-top:28px; padding-top:16px; border-top:1px solid var(--line); color:var(--muted); font-size:11px; }
+    @media (max-width:700px) { .shell { width:min(100% - 20px,1500px); padding-top:20px; } header { align-items:flex-start; flex-direction:column; } .count { text-align:left; } footer { flex-direction:column; } }
+  </style>
 </head>
-
 <body>
-  <div class="flex flex-col h-screen justify-between">
-    <div class="navbar bg-primary text-primary-content">
-      <div class="flex-1" id="headerContainer">
-        <a class="btn btn-ghost text-xl" onclick="window.location.search='';">
-          Koutube
-          <div class="badge badge-accent badge-lg" id="entryCount">0</div>
-          <div class="badge badge-lg hidden" id="pageCount"></div>
-        </a>
-      </div>
-      <div class="dropdown dropdown-end">
-        <div tabindex="0" role="button" class="btn m-1 btn-ghost">Theme
-          <svg width="12px" height="12px" class="h-2 w-2 fill-current opacity-60 inline-block"
-            xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048">
-            <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z"></path>
-          </svg>
-        </div>
-        <ul tabindex="0" class="dropdown-content z-[1] p-2 shadow-2xl bg-primary rounded-box mt-6 h-72 overflow-scroll">
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Light" value="light" />
-          </li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Dark" value="dark" />
-          </li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Cupcake"
-              value="cupcake" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Bumblebee"
-              value="bumblebee" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Emerald"
-              value="emerald" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Corporate"
-              value="corporate" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Synthwave"
-              value="synthwave" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Retro" value="retro" />
-          </li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Cyberpunk"
-              value="cyberpunk" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Valentine"
-              value="valentine" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Halloween"
-              value="halloween" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Garden"
-              value="garden" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Forest"
-              value="forest" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Aqua" value="aqua" />
-          </li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Lofi" value="lofi" />
-          </li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Pastel"
-              value="pastel" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Fantasy"
-              value="fantasy" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Wireframe"
-              value="wireframe" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Black" value="black" />
-          </li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Luxury"
-              value="luxury" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Dracula"
-              value="dracula" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Cmyk" value="cmyk" />
-          </li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Autumn"
-              value="autumn" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Business"
-              value="business" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Acid" value="acid" />
-          </li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Lemonade"
-              value="lemonade" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" aria-label="Night" value="night" />
-          </li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" value="coffee"
-              aria-label="Coffee" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" value="winter"
-              aria-label="Winter" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" value="dim" aria-label="Dim" /></li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" value="nord" aria-label="Nord" />
-          </li>
-          <li><input type="radio" name="theme-dropdown"
-              class="theme-controller btn btn-sm btn-block btn-ghost justify-start" value="sunset"
-              aria-label="Sunset" /></li>
-        </ul>
-      </div>
-    </div>
-    <div class="w-full flex content-center justify-center mt-8 pb-10">
-      <div class="bg-base-300 shadow-md rounded p-5 w-[calc(100%-10rem)]">
-        <div class="flex flex-col overflow-auto h-96" id="table-container">
-        </div>
-        <div class="grid grid-flow-col" id="buttons"></div>
-      </div>
-    </div>
-    <footer class="footer items-center p-4 bg-neutral text-neutral-content flex flex-row justify-between">
-      <aside>
-        <div>
-          <p>Please don't abuse my services.</p>
-          <p>- G</p>
-        </div>
-      </aside>
-      <nav class="flex flex-col sm:flex-row">
-        <a href="https://github.com/iGerman00/koutube" target="_blank" class="btn btn-wide btn-sm max-w-24">
-          GitHub
-        </a>
-        <a href="https://igerman.cc/" target="_blank" class="btn btn-primary btn-wide btn-sm max-w-24">
-          Contact
-        </a>
-        <a href="https://ko-fi.com/D1D2BJ5D6" target="_blank" class="btn btn-secondary btn-wide btn-sm max-w-24">
-          Donate
-        </a>
-      </nav>
-    </footer>
+  <div class="shell">
+    <header><div><div class="eyebrow">Gakkou Culture Club / Gakkou YouTube Club</div><h1>PUBLIC<span> CACHE</span></h1></div><div class="count"><strong id="entryCount">0</strong> indexed entries</div></header>
+    <main id="table-container"></main>
+    <nav id="buttons"></nav>
+    <footer><span>Cached links are public. Please don't abuse the service.</span><span>standalone / no workers</span></footer>
   </div>
-</body>
-
 <script>
-  const theme = localStorage.getItem('theme') || 'pastel';
-  document.querySelector('html').setAttribute('data-theme', theme);
-
-  const themeControllers = document.querySelectorAll('.theme-controller');
-  themeControllers.forEach(controller => {
-    controller.addEventListener('click', function () {
-      const theme = this.value;
-      localStorage.setItem('theme', theme);
-      document.querySelector('html').setAttribute('data-theme', theme);
-    });
-  });
-
-  try {
-    window.cache_entries = $CACHE_ENTRIES;
-  } catch (e) {
-    console.error('Error parsing cache entries:', e);
-    window.cache_entries = [];
+  window.cache_entries = $CACHE_ENTRIES;
+  window.count_entries = $COUNT_ENTRIES;
+  const page = Number(new URLSearchParams(location.search).get('page') || 1), perPage = 100;
+  const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function formatExpiration(timestamp) { const d = new Date(timestamp * 1000), days = Math.floor((d - Date.now()) / 86400000); return days < 0 ? 'expired' : days === 0 ? 'today' : days === 1 ? 'tomorrow' : days < 7 ? `in ${days} days` : d.toISOString().slice(0,10); }
+  function cleanUrl(raw) { try { const u = new URL('/' + raw, location.origin); ['t','nocache','nothumb','shorts','dislikes','itag','dearrow','stock','size'].forEach(p => u.searchParams.delete(p)); return u.pathname.replace(/^\//,'') + (u.search ? u.search : ''); } catch { return raw; } }
+  const container = document.querySelector('#table-container'); document.querySelector('#entryCount').textContent = Number(window.count_entries).toLocaleString();
+  if (!window.cache_entries.length) container.innerHTML = '<div class="empty">Nothing cached yet.</div>'; else {
+    const rows = window.cache_entries.map(e => `<tr><td><a href="/${esc(e.url)}" target="_blank" title="${esc(e.url)}">${esc(cleanUrl(e.url).slice(0,70))}</a></td><td><span class="tag">${esc(e.type)}</span></td><td class="muted">${esc(e.timecode || '—')}</td><td>${esc(e.stock || '—')}</td><td>${esc(e.dearrow || '—')}</td><td>${esc(e.itag || '—')}</td><td class="muted">${esc(e.size || '—')}</td><td class="muted">${esc(formatExpiration(e.expiration))}</td></tr>`).join('');
+    container.innerHTML = `<table><thead><tr><th>URL</th><th>Type</th><th>Timecode</th><th>Stock</th><th>DeArrow</th><th>Itag</th><th>Size</th><th>Expires</th></tr></thead><tbody>${rows}</tbody></table>`;
   }
-
-  try {
-    window.count_entries = $COUNT_ENTRIES;
-  } catch (e) {
-    window.count_entries = 0;
-  }
-
-  var entriesPerPage = 100;
-  var currentPage = new URLSearchParams(window.location.search).get('page') || 1;
-
-  var populateEntries = function () {
-    var tableContainer = document.querySelector('#table-container');
-    var buttonContainer = document.querySelector('#buttons');
-    tableContainer.innerHTML = '';
-
-    if (window.cache_entries.length === 0) {
-      tableContainer.innerHTML = '<div class="flex justify-center items-center h-full text-3xl font-bold"><p>Nothing here but us jackals!</p></div>';
-    } else {
-      document.querySelector('#entryCount').innerText = window.count_entries;
-      var table = document.createElement('table');
-      table.className = 'table table-zebra table-pin-rows w-full';
-
-      // Create table head and body
-      var thead = document.createElement('thead');
-      var tbody = document.createElement('tbody');
-
-      // Define headers based on PublicCacheEntry keys
-      var headers = ['URL', 'Type', 'Timecode', 'Stock', 'DeArrow', 'Itag', 'Size', 'Expiration'];
-      var trHead = document.createElement('tr');
-      headers.forEach(header => {
-        var th = document.createElement('th');
-        th.innerText = header;
-        trHead.appendChild(th);
-      });
-      thead.appendChild(trHead);
-
-      var start = (currentPage - 1) * entriesPerPage;
-      var end = start + entriesPerPage;
-      var entriesToShow = window.cache_entries;
-
-      // Populate table rows
-      entriesToShow.forEach(entry => {
-        try {
-          const tr = document.createElement('tr');
-
-          headers.forEach(header => {
-            const headerKey = header.toLowerCase();
-            const td = document.createElement('td');
-            const cellValue = entry[headerKey];
-
-            if (headerKey === 'url') {
-              const baseUrl = entry['type'] === 'music' ? 'https://music.koutube.com/' : window.location.origin + '/';
-              const a = document.createElement('a');
-              let cleanedUrl = cellValue;
-
-              const paramsToRemove = ['t', 'nocache', 'nothumb', 'shorts', 'dislikes', 'itag', 'dearrow', 'stock', 'size'];
-              cleanedUrl = removeParamsFromUrl(cleanedUrl, paramsToRemove);
-
-              cleanedUrl = cleanedUrl.replace('img/', '');
-
-              const prefixes = ['shorts/', 'watch?v=', 'music/', 'channel/', 'user/', 'playlist/', 'playlist?list=', '/c/'];
-              cleanedUrl = trimUrlPrefix(cleanedUrl, prefixes);
-
-              if (cleanedUrl.length > 50) {
-                cleanedUrl = cleanedUrl.substr(0, 50) + '...';
-              }
-              a.href = `${baseUrl}${cellValue}`;
-              a.innerText = cleanedUrl;
-              a.title = cellValue;
-              a.target = '_blank';
-              td.appendChild(a);
-            } else if (headerKey === 'expiration') {
-              td.innerText = formatExpirationDate(cellValue);
-              td.title = new Date(cellValue * 1000).toISOString();
-            } else if (headerKey === 'timecode') {
-              td.innerText = formatTimeCode(cellValue);
-            } else if (headerKey === 'size') {
-              td.innerText = cellValue;
-            } else if (headerKey === 'itag') {
-              td.innerText = cellValue || '';
-            } else if (headerKey === 'dearrow') {
-              td.innerText = cellValue || '';
-            } else if (headerKey === 'stock') {
-              td.innerText = cellValue || '';
-            }
-            else {
-              td.innerText = cellValue || '';
-            }
-
-            tr.appendChild(td);
-          });
-
-          tbody.appendChild(tr);
-        } catch (e) {
-          console.error('Error rendering entry:', e, entry);
-        }
-      });
-
-      table.appendChild(thead);
-      table.appendChild(tbody);
-      tableContainer.appendChild(table);
-    }
-
-    // Pagination buttons
-    buttonContainer.innerHTML = '';
-
-    if (currentPage > 1) {
-      var prevPageButton = document.createElement('button');
-      prevPageButton.className = 'btn btn-primary m-2';
-      prevPageButton.innerText = 'Previous Page';
-      prevPageButton.addEventListener('click', function () {
-        window.location.search = `?page=${currentPage - 1}`;
-      });
-      buttonContainer.appendChild(prevPageButton);
-    }
-
-    if (end <= window.count_entries) {
-      var nextPageButton = document.createElement('button');
-      nextPageButton.className = 'btn btn-primary m-2';
-      nextPageButton.innerText = 'Next Page';
-      nextPageButton.addEventListener('click', function () {
-        window.location.search = `?page=${Number(currentPage) + 1}`;
-      });
-      buttonContainer.appendChild(nextPageButton);
-    }
-
-    if (currentPage > 1) {
-      var pageCounter = document.getElementById('pageCount');
-      pageCounter.classList.remove('hidden');
-      pageCounter.innerText = `${currentPage} of ${Math.ceil(window.count_entries / entriesPerPage)}`;
-      pageCounter.onclick = function () {
-        window.location.search = `?page=` + Math.ceil(window.count_entries / entriesPerPage);
-      };
-    }
-  };
-
-  populateEntries();
-
-  function formatExpirationDate(timestamp) {
-    const expirationDate = new Date(timestamp * 1000);
-    const today = new Date();
-    const differenceInDays = Math.floor((expirationDate - today) / (1000 * 60 * 60 * 24));
-
-    if (differenceInDays < 0) return 'Expired';
-    if (differenceInDays === 0) return 'Today';
-    if (differenceInDays === 1) return 'Tomorrow';
-    if (differenceInDays < 7) return `In ${differenceInDays} days`;
-
-    return expirationDate.toDateString();
-  }
-
-  function formatTimeCode(timecode) {
-    if (timecode === '') return '';
-    try {
-      let timeInSeconds = 0;
-      if (timecode.includes('h')) {
-        const hours = Number(timecode.split('h')[0]);
-        timeInSeconds += hours * 3600;
-        timecode = timecode.split('h')[1];
-      }
-      if (timecode.includes('m')) {
-        const minutes = Number(timecode.split('m')[0]);
-        timeInSeconds += minutes * 60;
-        timecode = timecode.split('m')[1];
-      }
-      if (timecode.includes('s')) {
-        const seconds = Number(timecode.split('s')[0]);
-        timeInSeconds += seconds;
-      }
-
-      const date = new Date(0);
-      date.setSeconds(timeInSeconds == 0 ? Number(timecode) : timeInSeconds);
-      let timeString = date.toISOString().substring(11, 19).replace('00:', '');
-      return timeString;
-    } catch (e) {
-      return '';
-    }
-  }
-
-  function removeParamsFromUrl(url, paramsToRemove) {
-    const urlObj = new URL(window.location.origin + '/' + url);
-    const searchParams = urlObj.searchParams;
-
-    paramsToRemove.forEach(param => {
-      searchParams.delete(param);
-    });
-
-    urlObj.search = searchParams.toString();
-    let path = urlObj.toString().substr(window.location.origin.length + 1);
-    return path;
-  }
-
-  function trimUrlPrefix(url, prefixes) {
-    for (let i = 0; i < prefixes.length; i++) {
-      if (url.startsWith(prefixes[i])) {
-        return url.substr(prefixes[i].length);
-      }
-    }
-    return url;
-  }
+  const buttons = document.querySelector('#buttons'); const totalPages = Math.max(1, Math.ceil(window.count_entries / perPage)); buttons.innerHTML = `<button ${page <= 1 ? 'disabled' : ''} onclick="location='?page=${page-1}'">← previous</button><span class="muted">page ${page} / ${totalPages}</span><button ${page >= totalPages ? 'disabled' : ''} onclick="location='?page=${page+1}'">next →</button>`;
 </script>
-
+</body>
 </html>

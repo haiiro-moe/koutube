@@ -1,8 +1,9 @@
-import { config } from '../constants';
-import { CacheData, Env, Video } from '../types/types';
-import { putCacheEntry, stripTracking, getVideoInfo, getDearrowThumbnail, getDearrowBranding } from '../utils';
-import puppeteer from '@cloudflare/puppeteer';
-import embedTemplate from '../templates/embed.html';
+import { config } from '../constants.js';
+import { CacheData, Env, Video } from '../types/types.js';
+import { putCacheEntry, stripTracking, getVideoInfo, getDearrowThumbnail, getDearrowBranding } from '../utils.js';
+import puppeteer from 'puppeteer';
+import { Buffer } from 'node:buffer';
+import embedTemplate from '../templates/embed.html.js';
 
 export default {
 	async handleEmbedImage(request: Request, env: Env, isApi: boolean = false, ctx?: ExecutionContext): Promise<Response> {
@@ -70,7 +71,7 @@ export default {
 		}
 		try {
 			const shouldCache = new URL(request.url).searchParams.getCaseInsensitive('nocache') === null;
-			const info = await getVideoInfo(videoId, env.D1_DB, !shouldCache);
+			const info = await getVideoInfo(videoId, env.DB, !shouldCache);
 			let bestThumbnail = info.videoThumbnails?.sort((a,b) => b.width - a.width)[0]?.url || `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 			let bestAvatar = info.authorThumbnails?.sort((a,b) => b.width - a.width)[0]?.url || 'https://yt3.ggpht.com/a/default-user=s48-c-k-c0x00ffffff-no-rj';
 
@@ -100,15 +101,15 @@ export default {
 				.replace('{{title}}', info.title)
 				.replace('{{channel}}', info.author);
 
-			const browser = await puppeteer.launch(env.BROWSER);
+			const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
 			const page = await browser.newPage();
 			await page.setViewport({ width, height }); // set viewport size
-			await page.setContent(html, { waitUntil: 'networkidle0' });
+			await page.setContent(html, { waitUntil: 'load' });
 
-			const screenshot = await page.screenshot();
+			const screenshot = await page.screenshot({ type: 'png' });
 			await browser.close();
 
-			const base64Image = screenshot.toString('base64');
+			const base64Image = Buffer.from(screenshot).toString('base64');
 
 			if (isApi) {
 				const apiResponse = {
@@ -142,7 +143,7 @@ export default {
 						'Cached-On': new Date().toISOString(),
 					},
 				};
-				const promise = putCacheEntry(env.D1_DB, stripTracking(request.url), cacheEntry, config.imageExpireTime);
+				const promise = putCacheEntry(env.DB, stripTracking(request.url), cacheEntry, config.imageExpireTime);
 				if (ctx) {
 					ctx.waitUntil(promise);
 				} else {
@@ -164,14 +165,14 @@ export default {
 				},
 			};
 
-			const promise = putCacheEntry(env.D1_DB, stripTracking(request.url), cacheEntry, config.imageExpireTime);
+			const promise = putCacheEntry(env.DB, stripTracking(request.url), cacheEntry, config.imageExpireTime);
 			if (ctx) {
 				ctx.waitUntil(promise);
 			} else {
 				await promise;
 			}
 
-			return new Response(screenshot, {
+			return new Response(Buffer.from(screenshot), {
 				status: 200,
 				headers: {
 					'Content-Type': 'image/png',

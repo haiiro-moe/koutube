@@ -1,4 +1,4 @@
-# Koutube API Documentation
+# Gakkou YouTube Club API Documentation
 
 > [!WARNING]
 > This API is a work in progress. Please report any issues you encounter that do not occur on the main service. Do not report Invidious problems here.
@@ -44,7 +44,7 @@ A lot of fields are strings, not numbers - check types on your side because it's
 Real example:
 ```json
 {
-  "siteName": "Koutube - use s/y/k",
+  "siteName": "Gakkou YouTube Club",
   "contentType": "video",
   "themeColor": "#ff5d5b",
   "playerStreamUrl": "https://invidious-instance.com/latest_version?id=dQw4w9WgXcQ&itag=18&local=false",
