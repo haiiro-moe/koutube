@@ -1,24 +1,25 @@
 {
-  "name": "yockstube",
-  "version": "0.0.0",
+  "name": "koutube",
+  "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "deploy": "wrangler deploy",
-    "start": "wrangler dev --remote",
-    "init-db": "wrangler d1 execute koutube-db --local --file=./schema.sql",
-    "init-remote-db": "wrangler d1 execute koutube-db --remote --file=./schema.sql",
-    "drop-images": "wrangler d1 execute koutube-db --remote --file=./drop_image_cache.sql",
-    "drop-last-1d": "wrangler d1 execute koutube-db --remote --file=./drop_last_1d.sql"
-  },
-  "devDependencies": {
-    "@cloudflare/puppeteer": "^1.1.0",
-    "@cloudflare/workers-types": "^4.20230419.0",
-    "@types/he": "^1.2.1",
-    "@types/node": "^20.14.6",
-    "typescript": "^5.0.4",
-    "wrangler": "^4.102.0"
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "init-db": "node dist/init-db.js",
+    "drop-images": "node dist/db-maintenance.js drop-images",
+    "drop-last-1d": "node dist/db-maintenance.js drop-last-1d"
   },
   "dependencies": {
-    "he": "^1.2.0"
+    "he": "^1.2.0",
+    "puppeteer": "^24.10.2"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/he": "^1.2.3",
+    "@types/node": "^22.15.21",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
   }
 }

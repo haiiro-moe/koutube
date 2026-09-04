@@ -1,5 +1,5 @@
-import { config } from './constants';
-import { RYDResponse, PlaylistInfo, Video, ChannelInfo, DeArrowResponse, CacheData, CacheDataEntry, ResolvedURL } from './types/types';
+import { config } from './constants.js';
+import { RYDResponse, PlaylistInfo, Video, ChannelInfo, DeArrowResponse, CacheData, CacheDataEntry, ResolvedURL, DatabaseLike } from './types/types.js';
 
 export function getURLType(url: URL): string {
 	const isShorts = url.pathname.startsWith('/shorts');
@@ -48,7 +48,7 @@ export async function isChannelVerified(channelId: string): Promise<boolean> {
 	return json.authorVerified;
 }
 
-export async function getVideoInfo(videoId: string, db?: D1Database, skipCache: boolean = false): Promise<Video> {
+export async function getVideoInfo(videoId: string, db?: DatabaseLike, skipCache: boolean = false): Promise<Video> {
 	if (db && !skipCache) {
 		const cacheKey = `api:v1:videos:${videoId}`;
 		const cached = await getCacheEntry(db, cacheKey);
@@ -88,7 +88,7 @@ export async function getVideoInfo(videoId: string, db?: D1Database, skipCache: 
 	return json;
 }
 
-export async function getPlaylistInfo(playlistId: string, db?: D1Database, skipCache: boolean = false): Promise<PlaylistInfo> {
+export async function getPlaylistInfo(playlistId: string, db?: DatabaseLike, skipCache: boolean = false): Promise<PlaylistInfo> {
 	if (db && !skipCache) {
 		const cacheKey = `api:v1:playlists:${playlistId}`;
 		const cached = await getCacheEntry(db, cacheKey);
@@ -122,7 +122,7 @@ export async function getPlaylistInfo(playlistId: string, db?: D1Database, skipC
 	return json;
 }
 
-export async function getChannelInfo(channelId: string, db?: D1Database, skipCache: boolean = false): Promise<ChannelInfo> {
+export async function getChannelInfo(channelId: string, db?: DatabaseLike, skipCache: boolean = false): Promise<ChannelInfo> {
 	if (db && !skipCache) {
 		const cacheKey = `api:v1:channels:${channelId}`;
 		const cached = await getCacheEntry(db, cacheKey);
@@ -355,13 +355,17 @@ export function escapeHtml(html: any) {
 
 // D1 DB functions
 
-export async function getCacheEntry(db: D1Database, key: string): Promise<CacheData | undefined> {
+export async function getCacheEntry(db: DatabaseLike, key: string): Promise<CacheData | undefined> {
 	if (!db) {
 		console.error('No database');
 		return undefined;
 	}
-	const row = (await db.prepare('SELECT Entry FROM CacheEntries WHERE EntryKey = ?').bind(key).first()) as CacheDataEntry;
+	const row = (await db.prepare('SELECT Entry, Expiration FROM CacheEntries WHERE EntryKey = ?').bind(key).first()) as CacheDataEntry;
 	if (!row) return undefined;
+	if (Number(row.Expiration) <= Math.floor(Date.now() / 1000)) {
+		await db.prepare('DELETE FROM CacheEntries WHERE EntryKey = ?').bind(key).run();
+		return undefined;
+	}
 	try {
 		return JSON.parse(row.Entry);
 	} catch (error: any) {
@@ -370,7 +374,7 @@ export async function getCacheEntry(db: D1Database, key: string): Promise<CacheD
 	}
 }
 
-export async function listCacheEntries(db: D1Database) {
+export async function listCacheEntries(db: DatabaseLike) {
 	if (!db) {
 		console.error('No database');
 		return [];
@@ -388,7 +392,7 @@ export async function listCacheEntries(db: D1Database) {
 
 		const rows = await db.prepare(query).all();
 
-		return rows.results.map((row) => {
+		return rows.results.map((row: any) => {
 			const entryKey = row.EntryKey as string;
 			const entry = JSON.parse(row.Entry as string);
 			return {
@@ -404,7 +408,7 @@ export async function listCacheEntries(db: D1Database) {
 	}
 }
 
-export async function deleteExpiredCacheEntries(db: D1Database) {
+export async function deleteExpiredCacheEntries(db: DatabaseLike) {
 	if (!db) {
 		console.error('No database');
 		return 0;
@@ -427,9 +431,10 @@ const PUBLIC_CACHE_FILTER = `
 	AND EntryKey NOT LIKE '%/api/%'
 	AND EntryKey NOT LIKE '%nocache%'
 	AND EntryKey NOT LIKE '__meta:%'
+	AND Expiration >= strftime('%s', 'now')
 `;
 
-export async function listCacheEntriesPaginated(db: D1Database, page: number = 1, limit: number = 10) {
+export async function listCacheEntriesPaginated(db: DatabaseLike, page: number = 1, limit: number = 10) {
 	if (!db) {
 		console.error('No database');
 		return { entries: [], total: 0 };
@@ -455,7 +460,7 @@ export async function listCacheEntriesPaginated(db: D1Database, page: number = 1
 			getCountCacheEntries(db),
 		]);
 
-		const entries = rows.results.map((row) => {
+		const entries = rows.results.map((row: any) => {
 			return {
 				name: row.EntryKey as string,
 				cachedOn: row.CachedOn as number,
@@ -477,7 +482,7 @@ export async function listCacheEntriesPaginated(db: D1Database, page: number = 1
 
 let _cachedCount: { count: number; ts: number } | null = null;
 
-export async function getCountCacheEntries(db: D1Database) {
+export async function getCountCacheEntries(db: DatabaseLike) {
 	if (!db) {
 		console.error('No database');
 		return 0;
@@ -511,7 +516,7 @@ export async function getCountCacheEntries(db: D1Database) {
 	}
 }
 
-export async function updatePublicCount(db: D1Database, count?: number) {
+export async function updatePublicCount(db: DatabaseLike, count?: number) {
 	if (!db) return;
 	try {
 		if (count === undefined) {
@@ -536,7 +541,7 @@ export async function updatePublicCount(db: D1Database, count?: number) {
 	}
 }
 
-export async function putCacheEntry(db: D1Database, key: string, value: CacheData, expiration: number) {
+export async function putCacheEntry(db: DatabaseLike, key: string, value: CacheData, expiration: number) {
 	if (!db) {
 		console.error('No database');
 		return;
@@ -562,7 +567,7 @@ export async function putCacheEntry(db: D1Database, key: string, value: CacheDat
 	}
 }
 
-export async function deleteCacheEntry(db: D1Database, key: string) {
+export async function deleteCacheEntry(db: DatabaseLike, key: string) {
 	if (!db) {
 		console.error('No database');
 		return;
@@ -570,7 +575,7 @@ export async function deleteCacheEntry(db: D1Database, key: string) {
 	await db.prepare('DELETE FROM CacheEntries WHERE EntryKey = ?').bind(key).run();
 }
 
-export async function getDirectUrl(videoId: string, itag: string | number, db?: D1Database, skipCache: boolean = false): Promise<string> {
+export async function getDirectUrl(videoId: string, itag: string | number, db?: DatabaseLike, skipCache: boolean = false): Promise<string> {
 	const localParam = config.enableInvidiousProxying ? 'true' : 'false';
 	const targetUrl = `${config.api_base}/latest_version?id=${videoId}&itag=${itag}&local=${localParam}`;
 

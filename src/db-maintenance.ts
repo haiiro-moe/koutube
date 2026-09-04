@@ -1,0 +1,12 @@
+import path from 'node:path';
+import fs from 'node:fs';
+import { createDatabase } from './db.js';
+const dir = process.env.DATA_DIR || path.resolve(process.cwd(), 'data');
+fs.mkdirSync(dir, { recursive: true });
+const db = createDatabase(path.join(dir, 'koutube.sqlite'));
+const command = process.argv[2];
+if (command === 'drop-images') db.prepare("DELETE FROM CacheEntries WHERE ContentType = 'image/png'").run();
+else if (command === 'drop-last-1d') db.prepare("DELETE FROM CacheEntries WHERE Expiration < strftime('%s', 'now') - 86400").run();
+else throw new Error(`Unknown maintenance command: ${command}`);
+db.close();
+console.log(`Completed ${command}`);

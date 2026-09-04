@@ -1,7 +1,7 @@
-import { Env, CacheData, ChannelEmbedData } from '../types/types';
-import { config } from '../constants';
+import { Env, CacheData, ChannelEmbedData } from '../types/types.js';
+import { config } from '../constants.js';
 import he from 'he';
-import { getChannelInfo, putCacheEntry, renderGenericTemplate, resolveUrl, isChannelVerified, stripTracking } from '../utils';
+import { getChannelInfo, putCacheEntry, renderGenericTemplate, resolveUrl, isChannelVerified, stripTracking } from '../utils.js';
 
 export default {
 	async handleChannel(request: Request, env: Env, isApi: boolean = false, ctx?: ExecutionContext): Promise<Response> {
@@ -44,7 +44,7 @@ export default {
 		const shouldCache = new URL(request.url).searchParams.getCaseInsensitive('nocache') === null;
 		// Once we have channel ID, fetch info and verification status in parallel
 		const [info, isVerified] = await Promise.all([
-			getChannelInfo(channel, env.D1_DB, !shouldCache),
+			getChannelInfo(channel, env.DB, !shouldCache),
 			isChannelVerified(channel)
 		]);
 
@@ -113,7 +113,7 @@ export default {
 					'Cached-On': new Date().toISOString(),
 				},
 			};
-			const promise = putCacheEntry(env.D1_DB, stripTracking(request.url), cacheEntry, config.channelExpireTime);
+			const promise = putCacheEntry(env.DB, stripTracking(request.url), cacheEntry, config.channelExpireTime);
 			if (ctx) {
 				ctx.waitUntil(promise);
 			} else {
@@ -136,7 +136,7 @@ export default {
 				'Cached-On': new Date().toISOString(),
 			},
 		};
-		const promise = putCacheEntry(env.D1_DB, stripTracking(request.url), cacheEntry, config.channelExpireTime);
+		const promise = putCacheEntry(env.DB, stripTracking(request.url), cacheEntry, config.channelExpireTime);
 		if (ctx) {
 			ctx.waitUntil(promise);
 		} else {

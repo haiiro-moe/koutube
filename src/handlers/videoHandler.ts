@@ -1,5 +1,5 @@
-import { Env, VideoEmbedData, CacheData } from '../types/types';
-import { config } from '../constants';
+import { Env, VideoEmbedData, CacheData } from '../types/types.js';
+import { config } from '../constants.js';
 import he from 'he';
 import {
 	getDearrowBranding,
@@ -11,7 +11,7 @@ import {
 	renderGenericTemplate,
 	stripTracking,
 	getDirectUrl,
-} from '../utils';
+} from '../utils.js';
 
 export default {
 	async handleVideo(request: Request, env: Env, isApi: boolean = false, ctx?: ExecutionContext): Promise<Response> {
@@ -94,7 +94,7 @@ export default {
 		const shouldCache = new URL(request.url).searchParams.getCaseInsensitive('nocache') === null;
 
 		const [info, rydResponse, dearrow] = await Promise.all([
-			getVideoInfo(videoId, env.D1_DB, !shouldCache),
+			getVideoInfo(videoId, env.DB, !shouldCache),
 			(config.enableDislikes || overrideDislikes) ? getDislikes(videoId) : Promise.resolve(undefined),
 			enableDeArrow ? getDearrowBranding(videoId) : Promise.resolve(undefined),
 		]);
@@ -216,7 +216,7 @@ export default {
 			ownerProfileUrl: 'https://youtube.com' + info.authorUrl,
 			bestThumbnail: isShorts || overrideNoThumb ? '' : info.videoThumbnails[0].url,
 			isLive: info.liveNow,
-			directUrl: await getDirectUrl(videoId, videoResolution.itag, env.D1_DB, !shouldCache),
+			directUrl: await getDirectUrl(videoId, videoResolution.itag, env.DB, !shouldCache),
 			formatStreams: info.formatStreams,
 			resolution: videoResolution,
 			youtubeUrl: getOriginalUrl(),
@@ -258,7 +258,7 @@ export default {
 					'Cached-On': new Date().toISOString(),
 				},
 			};
-			const promise = putCacheEntry(env.D1_DB, stripTracking(request.url), cacheEntry, config.videoExpireTime);
+			const promise = putCacheEntry(env.DB, stripTracking(request.url), cacheEntry, config.videoExpireTime);
 			if (ctx) {
 				ctx.waitUntil(promise);
 			} else {
@@ -281,7 +281,7 @@ export default {
 				'Cached-On': new Date().toISOString(),
 			},
 		};
-		const promise = putCacheEntry(env.D1_DB, stripTracking(request.url), cacheEntry, config.videoExpireTime);
+		const promise = putCacheEntry(env.DB, stripTracking(request.url), cacheEntry, config.videoExpireTime);
 		if (ctx) {
 			ctx.waitUntil(promise);
 		} else {

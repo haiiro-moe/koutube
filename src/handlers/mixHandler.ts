@@ -1,7 +1,7 @@
-import { Env, CacheData, MixEmbedData } from '../types/types';
-import { config } from '../constants';
+import { Env, CacheData, MixEmbedData } from '../types/types.js';
+import { config } from '../constants.js';
 import he from 'he';
-import { getPlaylistInfo as getMixInfo, putCacheEntry, renderGenericTemplate, stripTracking } from '../utils';
+import { getPlaylistInfo as getMixInfo, putCacheEntry, renderGenericTemplate, stripTracking } from '../utils.js';
 
 export default {
 	async handleMix(request: Request, env: Env, isApi: boolean = false, ctx?: ExecutionContext): Promise<Response> {
@@ -37,7 +37,7 @@ export default {
 		}
 
 		const shouldCache = new URL(request.url).searchParams.getCaseInsensitive('nocache') === null;
-		const info = await getMixInfo(mixId, env.D1_DB, !shouldCache);
+		const info = await getMixInfo(mixId, env.DB, !shouldCache);
 
 		if (info.error) {
 			if (isApi) {
@@ -99,7 +99,7 @@ export default {
 					'Cached-On': new Date().toISOString(),
 				},
 			};
-			const promise = putCacheEntry(env.D1_DB, stripTracking(request.url), cacheEntry, config.mixExpireTime);
+			const promise = putCacheEntry(env.DB, stripTracking(request.url), cacheEntry, config.mixExpireTime);
 			if (ctx) {
 				ctx.waitUntil(promise);
 			} else {
@@ -122,7 +122,7 @@ export default {
 				'Cached-On': new Date().toISOString(),
 			},
 		};
-		const promise = putCacheEntry(env.D1_DB, stripTracking(request.url), cacheEntry, config.mixExpireTime);
+		const promise = putCacheEntry(env.DB, stripTracking(request.url), cacheEntry, config.mixExpireTime);
 		if (ctx) {
 			ctx.waitUntil(promise);
 		} else {

@@ -1,6 +1,6 @@
-import playlistHandler from './handlers/playlistHandler';
-import videoHandler from './handlers/videoHandler';
-import { Env, PublicCacheEntry } from './types/types';
+import playlistHandler from './handlers/playlistHandler.js';
+import videoHandler from './handlers/videoHandler.js';
+import { Env, PublicCacheEntry } from './types/types.js';
 import {
 	deleteExpiredCacheEntries,
 	getCacheEntry,
@@ -10,13 +10,19 @@ import {
 	renderGenericTemplate,
 	stripTracking,
 	updatePublicCount,
-} from './utils';
-import template from './templates/db_listing.html';
-import { config, getRandomApiInstance, robots } from './constants';
-import embedImageHandler from './handlers/embedImageHandler';
-import channelHandler from './handlers/channelHandler';
+} from './utils.js';
+import template from './templates/db_listing.html.js';
+import { config, getRandomApiInstance, robots } from './constants.js';
+import embedImageHandler from './handlers/embedImageHandler.js';
+import channelHandler from './handlers/channelHandler.js';
 
 import { Buffer } from 'node:buffer';
+
+const getCaseInsensitive = (params: URLSearchParams, param: string) => {
+	const wanted = param.toLowerCase();
+	for (const [key, value] of params.entries()) if (key.toLowerCase() === wanted) return value;
+	return null;
+};
 
 declare global {
 	interface URLSearchParams {
@@ -25,13 +31,7 @@ declare global {
 }
 
 URLSearchParams.prototype.getCaseInsensitive = function (param) {
-	const lowercasedParam = param.toLowerCase();
-	for (const [key, value] of this.entries()) {
-		if (key.toLowerCase() === lowercasedParam) {
-			return value;
-		}
-	}
-	return null;
+	return getCaseInsensitive(this, param);
 };
 
 async function withTiming(handler: () => Promise<Response>): Promise<Response> {
@@ -44,9 +44,9 @@ async function withTiming(handler: () => Promise<Response>): Promise<Response> {
 
 export default {
 	async scheduled(event: ScheduledEvent, env: Env) {
-		const deleted = await deleteExpiredCacheEntries(env.D1_DB);
+		const deleted = await deleteExpiredCacheEntries(env.DB);
 		console.log({deleted_cache_entries: deleted, timestamp: new Date().toISOString()});
-		await updatePublicCount(env.D1_DB);
+		await updatePublicCount(env.DB);
 	},
 
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
@@ -54,9 +54,9 @@ export default {
 			if (new URL(request.url).pathname === '/') {
 				async function getListing(_request: Request) {
 					const page = new URL(_request.url).searchParams.get('page') || '1';
-					const { entries, total } = await listCacheEntriesPaginated(env.D1_DB, parseInt(page), 100);
+					const { entries, total } = await listCacheEntriesPaginated(env.DB, parseInt(page), 100);
 
-					let obj = entries.map((key) => {
+					let obj = entries.map((key: any) => {
 						if (typeof key.name !== 'string' || key.name.startsWith('rateLimit:') || key.name.startsWith('api:') || key.name.startsWith('resolvedUrl:')) return;
 
 						try {
@@ -108,7 +108,7 @@ export default {
 			}
 
 			if (new URL(request.url).pathname === '/status' || new URL(request.url).pathname === '/api/status') {
-				const count = await getCountCacheEntries(env.D1_DB);
+				const count = await getCountCacheEntries(env.DB);
 				const body = JSON.stringify({ count, status: 'ok' });
 				return new Response(body, {
 					headers: { 'Content-Type': 'application/json' },
@@ -128,7 +128,7 @@ export default {
 
 				try {
 					const url = stripTracking(request.url);
-					const cache = await getCacheEntry(env.D1_DB, url);
+					const cache = await getCacheEntry(env.DB, url);
 					const shouldCache = new URL(request.url).searchParams.getCaseInsensitive('nocache') === null;
 					if (cache && shouldCache) {
 						console.log({cache_hit_url: url});
