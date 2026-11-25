@@ -2,6 +2,25 @@
 
 This fork keeps the original YouTube embed-fixing behavior while making the service self-hostable as a regular Node.js application. Cloudflare Workers, D1, Wrangler, and Browser Rendering are replaced with a Node HTTP server, SQLite persistence, and local Puppeteer/Chromium rendering for image embeds. It is also included in the parent Docker Compose stack as the `koutube` service, with persistent cache storage and a redesigned public listing.
 
+### Nix / NixOS
+
+The repo ships a `flake.nix` (x86_64-linux and aarch64-linux). Flakes only see git-tracked files, so `git add` new files before building.
+
+```sh
+# Development shell: Node 24 (node:sqlite needs >= 22.5) + nixpkgs chromium.
+# Sets PUPPETEER_SKIP_DOWNLOAD=1 and PUPPETEER_EXECUTABLE_PATH to that chromium.
+nix develop
+npm ci && npm run build && npm start   # run from the repo root: schema.sql is read from cwd
+
+# Packaged build (buildNpmPackage) and run
+nix build                              # ./result/bin/koutube
+PORT=8787 IV_DOMAIN=... IV_AUTH=... nix run
+```
+
+The package installs `dist/`, production `node_modules` and `schema.sql` under `$out/lib/koutube`. `bin/koutube` is a small wrapper that `cd`s there, so `schema.sql` resolves without any source change, then runs `node dist/server.js`. Because the store is read-only, it defaults `DATA_DIR` to `$XDG_STATE_HOME/koutube` (`~/.local/state/koutube`) and `PUPPETEER_EXECUTABLE_PATH` to nixpkgs' chromium. Override either through the environment; `PORT`, `IV_DOMAIN` and `IV_AUTH` work as usual. `koutube-init-db` and `koutube-db-maintenance drop-images|drop-last-1d` are the packaged versions of the `init-db` and `drop-*` npm scripts.
+
+After changing `package-lock.json`, update `npmDepsHash` in `flake.nix`: set it to `pkgs.lib.fakeHash`, run `nix build`, and paste the hash from the `got:` line.
+
 The original README follows below unchanged.
 
 **Original README**
