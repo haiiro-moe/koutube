@@ -4,3 +4,5 @@ wrangler.toml
 .dev.vars
 dist
 /data
+result
+.direnv
